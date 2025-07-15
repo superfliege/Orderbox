@@ -1,0 +1,222 @@
+{
+  "bestellungen": [
+    {
+      "name": "Pizza Markdorf",
+      "id": "1752598398862",
+      "createdAt": "2025-07-15T16:53:18.862Z",
+      "status": "Offen",
+      "besteller": [
+        {
+          "name": "testtt",
+          "id": "1752598406292",
+          "status": "Fertig",
+          "artikel": [
+            {
+              "beschreibung": "testttt",
+              "preis": "123",
+              "id": "1752598849246"
+            }
+          ],
+          "summe": 123
+        },
+        {
+          "name": "Fabrice",
+          "id": "1752598502937",
+          "status": "Fertig",
+          "artikel": [
+            {
+              "beschreibung": "Test",
+              "preis": "50",
+              "id": "1752598512023"
+            },
+            {
+              "beschreibung": "test",
+              "preis": "22",
+              "id": "1752602606373"
+            }
+          ],
+          "summe": 72
+        },
+        {
+          "name": "test",
+          "id": "1752599551877",
+          "status": "Fertig",
+          "artikel": [],
+          "summe": 0
+        },
+        {
+          "name": "testttt123",
+          "id": "1752599564648",
+          "status": "Offen",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 195,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "Fabrice",
+      "id": "1752598456941",
+      "createdAt": "2025-07-15T16:54:16.941Z",
+      "status": "Offen",
+      "besteller": [],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "Sushi-Friedrichshafen",
+      "id": "1752599145285",
+      "createdAt": "2025-07-15T17:05:45.285Z",
+      "status": "Offen",
+      "besteller": [],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test",
+      "id": "1752602464587",
+      "createdAt": "2025-07-15T18:01:04.587Z",
+      "status": "Offen",
+      "besteller": [
+        {
+          "name": "test",
+          "id": "1752602472892",
+          "status": "Offen",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test12333",
+      "id": "1752602782755",
+      "createdAt": "2025-07-15T18:06:22.755Z",
+      "status": "Offen",
+      "besteller": [],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test123",
+      "id": "1752602847302",
+      "createdAt": "2025-07-15T18:07:27.302Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "test",
+          "id": "1752603447547",
+          "status": "Bezahlt",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test",
+      "id": "1752602849316",
+      "createdAt": "2025-07-15T18:07:29.316Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "Test",
+          "id": "1752603145620",
+          "status": "Bezahlt",
+          "artikel": [
+            {
+              "beschreibung": "test",
+              "preis": "50",
+              "id": "1752603151730"
+            }
+          ],
+          "summe": 50
+        }
+      ],
+      "summe": 50,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test",
+      "id": "1752603684018",
+      "createdAt": "2025-07-15T18:21:24.018Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "test",
+          "id": "1752603692773",
+          "status": "Bezahlt",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test",
+      "id": "1752603742438",
+      "createdAt": "2025-07-15T18:22:22.438Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "test",
+          "id": "1752603746938",
+          "status": "Bezahlt",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 0,
+      "bestellername": "",
+      "bezahlart": ""
+    },
+    {
+      "name": "test",
+      "id": "1752603819801",
+      "createdAt": "2025-07-15T18:23:39.801Z",
+      "status": "Offen",
+      "besteller": [
+        {
+          "name": "test",
+          "id": "1752603822626",
+          "status": "Offen",
+          "artikel": [
+            {
+              "beschreibung": "test",
+              "preis": "50",
+              "id": "1752603968471"
+            },
+            {
+              "beschreibung": "test",
+              "preis": "253",
+              "id": "1752604685148"
+            }
+          ],
+          "summe": 303
+        },
+        {
+          "name": "test",
+          "id": "1752605143787",
+          "status": "Offen",
+          "artikel": [],
+          "summe": 0
+        }
+      ],
+      "summe": 303,
+      "bestellername": "Daniel",
+      "bezahlart": "paypal: test@web.de"
+    }
+  ]
+}
