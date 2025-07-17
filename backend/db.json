@@ -263,7 +263,7 @@
     {
       "name": "Pizza Markdorf 2",
       "bestellername": "Fabrice",
-      "bezahlart": "paypal",
+      "bezahlart": "paypal: test@web.de",
       "id": "1752777878474",
       "createdAt": "2025-07-17T18:44:38.474Z",
       "status": "Bezahlt",
@@ -275,18 +275,30 @@
           "artikel": [
             {
               "beschreibung": "Magarita",
-              "preis": "5.5",
+              "preis": "6",
               "id": "1752777897339",
               "anzahl": 5
             },
             {
               "beschreibung": "Hamburger",
               "preis": "5",
-              "anzahl": 5,
+              "anzahl": 1,
               "id": "1752778875812"
+            },
+            {
+              "beschreibung": "test",
+              "preis": "5",
+              "anzahl": 5,
+              "id": "1752779248338"
+            },
+            {
+              "beschreibung": "Magarita",
+              "preis": "4",
+              "anzahl": 1,
+              "id": "1752779546207"
             }
           ],
-          "summe": 10.5
+          "summe": 20
         },
         {
           "name": "Max",
@@ -295,7 +307,7 @@
           "artikel": [
             {
               "beschreibung": "Hamburger",
-              "preis": "5",
+              "preis": "4",
               "id": "1752777908672"
             },
             {
@@ -314,10 +326,10 @@
               "id": "1752778363072"
             }
           ],
-          "summe": 20
+          "summe": 19
         }
       ],
-      "summe": 30.5
+      "summe": 39
     }
   ]
 }

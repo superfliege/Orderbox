@@ -400,7 +400,7 @@ function BestellungDetail({ bestellung, refresh }) {
         <ul className="bestellung-list">
           {bestellung.besteller.map(b => (
             <li key={b.id} className="bestellung-item">
-              <BestellerDetail bestellung={b} orderId={bestellung.id} refresh={refresh} orderStatus={bestellung.status} />
+              <BestellerDetail besteller={b} orderId={bestellung.id} refresh={refresh} orderStatus={bestellung.status} allBesteller={bestellung.besteller} />
             </li>
           ))}
         </ul>
@@ -409,24 +409,24 @@ function BestellungDetail({ bestellung, refresh }) {
   );
 }
 
-function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
+function BestellerDetail({ besteller, orderId, refresh, orderStatus, allBesteller }) {
   const [showArtikelForm, setShowArtikelForm] = useState(false);
   const [artikelDesc, setArtikelDesc] = useState('');
   const [artikelPreis, setArtikelPreis] = useState('');
   const [artikelAnzahl, setArtikelAnzahl] = useState(1);
-  const [status, setStatus] = useState(bestellung.status);
-  const [nameValue, setNameValue] = useState(bestellung.name || '');
+  const [status, setStatus] = useState(besteller.status);
+  const [nameValue, setNameValue] = useState(besteller.name || '');
   const [editingName, setEditingName] = useState(false);
   const [editingArtikel, setEditingArtikel] = useState({ idx: null, field: null });
-  const [editArtikel, setEditArtikel] = useState(bestellung.artikel.map(a => ({ ...a })));
+  const [editArtikel, setEditArtikel] = useState(besteller.artikel.map(a => ({ ...a })));
 
-  useEffect(() => { setStatus(bestellung.status); }, [bestellung.status]);
-  useEffect(() => { setNameValue(bestellung.name || ''); }, [bestellung.name]);
-  useEffect(() => { setEditArtikel(bestellung.artikel.map(a => ({ ...a }))); }, [bestellung.artikel]);
+  useEffect(() => { setStatus(besteller.status); }, [besteller.status]);
+  useEffect(() => { setNameValue(besteller.name || ''); }, [besteller.name]);
+  useEffect(() => { setEditArtikel(besteller.artikel.map(a => ({ ...a }))); }, [besteller.artikel]);
 
   function saveBestellerName() {
     if (!nameValue.trim()) { setEditingName(false); return; }
-    fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}`, {
+    fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nameValue })
@@ -436,7 +436,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
     const newArtikel = [...editArtikel];
     newArtikel[idx][field] = value;
     setEditArtikel(newArtikel);
-    fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}`, {
+    fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ artikel: newArtikel, name: nameValue })
@@ -446,7 +446,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
   async function handleStatusChange(e) {
     const newStatus = e.target.value;
     setStatus(newStatus);
-    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}`, {
+    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
@@ -457,7 +457,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
   async function handleCreateArtikel(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (!artikelDesc.trim() || !artikelPreis.trim() || !artikelAnzahl) return;
-    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}/artikel`, {
+    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}/artikel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ beschreibung: artikelDesc, preis: artikelPreis, anzahl: Number(artikelAnzahl) || 1 })
@@ -479,7 +479,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
 
   async function handleEditSave() {
     // PATCH für Name und Artikel (ersetze Artikel komplett)
-    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}`, {
+    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nameValue, artikel: editArtikel })
@@ -489,19 +489,19 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
 
   function handleEditCancel() {
     setEditingName(false);
-    setNameValue(bestellung.name || '');
-    setEditArtikel(bestellung.artikel.map(a => ({ ...a })));
+    setNameValue(besteller.name || '');
+    setEditArtikel(besteller.artikel.map(a => ({ ...a })));
   }
 
   async function handleDeleteArtikel(artikelId) {
     console.log('DELETE Artikel:', {
-      url: `http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}/artikel/${artikelId}`,
+      url: `http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}/artikel/${artikelId}`,
       orderId,
-      bestellerId: bestellung.id,
+      bestellerId: besteller.id,
       artikelId
     });
     if (!window.confirm('Diesen Artikel wirklich löschen?')) return;
-    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}/artikel/${artikelId}`, {
+    await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${besteller.id}/artikel/${artikelId}`, {
       method: 'DELETE'
     });
     refresh();
@@ -509,11 +509,39 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
 
   // Gesamtsumme für diesen Besteller (Preis * Anzahl)
   function calcBestellerSumme() {
-    return bestellung.artikel?.reduce((sum, a) => {
+    return besteller.artikel?.reduce((sum, a) => {
       const preis = parseFloat(a.preis) || 0;
       const anzahl = Number(a.anzahl) > 0 ? Number(a.anzahl) : 1;
       return sum + preis * anzahl;
     }, 0) || 0;
+  }
+
+  // Hilfsfunktion: Preis-Mehrheit für Artikelname in dieser Bestellung
+  function getMajorityPrice(artikelName, thisId) {
+    // Alle Artikel aller Besteller mit ähnlichem Namen sammeln (außer dem eigenen)
+    const prices = [];
+    let maxDist = 2;
+    allBesteller?.forEach(b => {
+      b.artikel?.forEach(a => {
+        if (a.id === thisId) return; // eigenen Artikel überspringen
+        if (levenshtein(a.beschreibung?.trim() || '', artikelName?.trim() || '') <= maxDist) {
+          const preis = parseFloat(a.preis);
+          if (!isNaN(preis)) prices.push(preis);
+        }
+      });
+    });
+    if (prices.length === 0) return null;
+    // Mehrheitspreis bestimmen (häufigster Wert, gerundet auf 2 Nachkommastellen)
+    const freq = {};
+    prices.forEach(p => {
+      const key = p.toFixed(2);
+      freq[key] = (freq[key] || 0) + 1;
+    });
+    let maxCount = 0, majority = null;
+    Object.entries(freq).forEach(([k, v]) => {
+      if (v > maxCount) { maxCount = v; majority = parseFloat(k); }
+    });
+    return majority;
   }
 
   return (
@@ -523,7 +551,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
           {editingName ? (
             <input value={nameValue} onChange={e => setNameValue(e.target.value)} onBlur={saveBestellerName} onKeyDown={e => { if (e.key === 'Enter') saveBestellerName(); }} autoFocus style={{ fontWeight: 600, fontSize: '1em', maxWidth: 220 }} />
           ) : (
-            bestellung.name
+            besteller.name
           )}
         </h2>
         <span style={{ fontWeight: 700, fontSize: '1.15em', color: 'var(--text-main)', minWidth: 90, textAlign: 'right' }}>{calcBestellerSumme().toFixed(2)} €</span>
@@ -539,6 +567,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
         </div>
       </div>
       {/* editMode ist nicht mehr vorhanden, daher kein if-Block */}
+      {/* Im Render: vor <table> die aktuelle Bestellung global speichern (für Preisvergleich) */}
       <table className="artikel-tabelle">
         <thead>
           <tr>
@@ -549,60 +578,71 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
           </tr>
         </thead>
         <tbody>
-          {editArtikel.map((a, idx) => (
-            <tr key={a.id}>
-              <td style={{ cursor: 'pointer', width: '40%' }} onClick={() => setEditingArtikel({ idx, field: 'beschreibung' })}>
-                {editingArtikel.idx === idx && editingArtikel.field === 'beschreibung' ? (
-                  <input
-                    value={editArtikel[idx].beschreibung}
-                    onChange={e => handleEditArtikelChange(idx, 'beschreibung', e.target.value)}
-                    onBlur={e => saveArtikelField(idx, 'beschreibung', e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'beschreibung', e.target.value); }}
-                    autoFocus
-                    style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
-                  />
-                ) : (
-                  a.beschreibung || <span style={{ color: '#888' }}>–</span>
-                )}
-              </td>
-              <td style={{ cursor: 'pointer', width: '15%' }} onClick={() => setEditingArtikel({ idx, field: 'anzahl' })}>
-                {editingArtikel.idx === idx && editingArtikel.field === 'anzahl' ? (
-                  <input
-                    type="number"
-                    min={1}
-                    value={editArtikel[idx].anzahl || 1}
-                    onChange={e => handleEditArtikelChange(idx, 'anzahl', e.target.value)}
-                    onBlur={e => saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1); }}
-                    autoFocus
-                    style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
-                  />
-                ) : (
-                  a.anzahl || 1
-                )}
-              </td>
-              <td style={{ cursor: 'pointer', width: '25%' }} onClick={() => setEditingArtikel({ idx, field: 'preis' })}>
-                {editingArtikel.idx === idx && editingArtikel.field === 'preis' ? (
-                  <input
-                    value={editArtikel[idx].preis}
-                    onChange={e => handleEditArtikelChange(idx, 'preis', e.target.value)}
-                    onBlur={e => saveArtikelField(idx, 'preis', e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'preis', e.target.value); }}
-                    autoFocus
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
-                  />
-                ) : (
-                  a.preis !== undefined && a.preis !== '' ? Number(a.preis).toFixed(2) + ' €' : <span style={{ color: '#888' }}>–</span>
-                )}
-              </td>
-              <td style={{ width: '15%' }}>
-                <button className="secondary-btn" type="button" onClick={() => handleDeleteArtikel(a.id)} style={{ padding: '2px 8px' }}>🗑</button>
-              </td>
-            </tr>
-          ))}
+          {editArtikel.map((a, idx) => {
+            // Preisvergleich für Warnsymbol
+            const majority = getMajorityPrice(a.beschreibung, a.id);
+            const preis = parseFloat(a.preis);
+            const showWarn = majority !== null && Math.abs(preis - majority) > 0.01;
+            return (
+              <tr key={a.id}>
+                <td style={{ cursor: 'pointer', width: '40%' }} onClick={() => setEditingArtikel({ idx, field: 'beschreibung' })}>
+                  {editingArtikel.idx === idx && editingArtikel.field === 'beschreibung' ? (
+                    <input
+                      value={editArtikel[idx].beschreibung}
+                      onChange={e => handleEditArtikelChange(idx, 'beschreibung', e.target.value)}
+                      onBlur={e => saveArtikelField(idx, 'beschreibung', e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'beschreibung', e.target.value); }}
+                      autoFocus
+                      style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
+                    />
+                  ) : (
+                    a.beschreibung || <span style={{ color: '#888' }}>–</span>
+                  )}
+                </td>
+                <td style={{ cursor: 'pointer', width: '15%' }} onClick={() => setEditingArtikel({ idx, field: 'anzahl' })}>
+                  {editingArtikel.idx === idx && editingArtikel.field === 'anzahl' ? (
+                    <input
+                      type="number"
+                      min={1}
+                      value={editArtikel[idx].anzahl || 1}
+                      onChange={e => handleEditArtikelChange(idx, 'anzahl', e.target.value)}
+                      onBlur={e => saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1); }}
+                      autoFocus
+                      style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
+                    />
+                  ) : (
+                    a.anzahl || 1
+                  )}
+                </td>
+                <td style={{ cursor: 'pointer', width: '25%', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }} onClick={() => setEditingArtikel({ idx, field: 'preis' })}>
+                  {editingArtikel.idx === idx && editingArtikel.field === 'preis' ? (
+                    <input
+                      value={editArtikel[idx].preis}
+                      onChange={e => handleEditArtikelChange(idx, 'preis', e.target.value)}
+                      onBlur={e => saveArtikelField(idx, 'preis', e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'preis', e.target.value); }}
+                      autoFocus
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
+                    />
+                  ) : (
+                    <>
+                      {a.preis !== undefined && a.preis !== '' ? `${Number(a.preis).toFixed(2)} €` : <span style={{ color: '#888' }}>–</span>}
+                      {showWarn && (
+                        <span title="Preis weicht von Mehrheit ab" style={{ color: '#ffe066', marginLeft: 4, fontSize: '1.2em', verticalAlign: 'middle', cursor: 'help' }}>⚠️</span>
+                      )}
+                    </>
+                  )}
+                </td>
+                <td style={{ width: '15%' }}>
+                  <button className="secondary-btn" type="button" onClick={() => handleDeleteArtikel(a.id)} style={{ padding: '2px 8px' }}>🗑</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {showArtikelForm && !editingName && (
