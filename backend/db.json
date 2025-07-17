@@ -217,6 +217,107 @@
       "summe": 303,
       "bestellername": "Daniel",
       "bezahlart": "paypal: test@web.de"
+    },
+    {
+      "name": "pizza markdorf",
+      "bestellername": "fabrice",
+      "bezahlart": "paypal: test@web.de",
+      "id": "1752777576594",
+      "createdAt": "2025-07-17T18:39:36.594Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "martin",
+          "id": "1752777591003",
+          "status": "Bezahlt",
+          "artikel": [
+            {
+              "beschreibung": "test",
+              "preis": "5",
+              "id": "1752777600508"
+            },
+            {
+              "beschreibung": "test",
+              "preis": "2",
+              "id": "1752777603334"
+            }
+          ],
+          "summe": 7
+        },
+        {
+          "name": "max",
+          "id": "1752777595063",
+          "status": "Bezahlt",
+          "artikel": [
+            {
+              "beschreibung": "test",
+              "preis": "5",
+              "id": "1752777608694"
+            }
+          ],
+          "summe": 5
+        }
+      ],
+      "summe": 12
+    },
+    {
+      "name": "Pizza Markdorf 2",
+      "bestellername": "Fabrice",
+      "bezahlart": "paypal",
+      "id": "1752777878474",
+      "createdAt": "2025-07-17T18:44:38.474Z",
+      "status": "Bezahlt",
+      "besteller": [
+        {
+          "name": "Fabrice",
+          "id": "1752777889931",
+          "status": "Bezahlt",
+          "artikel": [
+            {
+              "beschreibung": "Magarita",
+              "preis": "5.5",
+              "id": "1752777897339",
+              "anzahl": 5
+            },
+            {
+              "beschreibung": "Hamburger",
+              "preis": "5",
+              "anzahl": 5,
+              "id": "1752778875812"
+            }
+          ],
+          "summe": 10.5
+        },
+        {
+          "name": "Max",
+          "id": "1752777901691",
+          "status": "Bezahlt",
+          "artikel": [
+            {
+              "beschreibung": "Hamburger",
+              "preis": "5",
+              "id": "1752777908672"
+            },
+            {
+              "beschreibung": "Magarita",
+              "preis": "5",
+              "id": "1752778329609"
+            },
+            {
+              "beschreibung": "Magaarita",
+              "preis": "5",
+              "id": "1752778344930"
+            },
+            {
+              "beschreibung": "Magarida",
+              "preis": "5",
+              "id": "1752778363072"
+            }
+          ],
+          "summe": 20
+        }
+      ],
+      "summe": 30.5
     }
   ]
 }

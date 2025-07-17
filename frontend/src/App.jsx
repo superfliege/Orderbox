@@ -113,26 +113,37 @@ function App() {
           <ul className="order-list">
             {[...bestellungen]
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map(bestellung => (
-                <li key={bestellung.id}>
-                  <button
-                    className={
-                      (selectedBestellung?.id === bestellung.id ? 'order-btn selected' : 'order-btn') +
-                      (isToday(bestellung.createdAt) ? ' order-btn-today' : '')
-                    }
-                    onClick={() => {
-                      setSelectedBestellung(bestellung);
-                      setSidebarOpen(false);
-                    }}
-                  >
-                    <span className="order-title">{bestellung.name || 'Lieferando-Bestellung'}</span><br />
-                    <span className="order-meta">{bestellung.bestellername || '–'} · {bestellung.bezahlart || '–'}</span><br />
-                    <small>{new Date(bestellung.createdAt).toLocaleString()}</small><br />
-                    <b>Status:</b> <span className={`status-badge status-badge-${bestellung.status}`}>{bestellung.status}</span><br />
-                    <b>Gesamt:</b> {bestellung.summe?.toFixed(2)} €
-                  </button>
-                </li>
-              ))}
+              .map(bestellung => {
+                // Korrekte Gesamtsumme berechnen (Preis * Anzahl)
+                let summe = 0;
+                bestellung.besteller?.forEach(b => {
+                  b.artikel?.forEach(a => {
+                    const preis = parseFloat(a.preis) || 0;
+                    const anzahl = Number(a.anzahl) > 0 ? Number(a.anzahl) : 1;
+                    summe += preis * anzahl;
+                  });
+                });
+                return (
+                  <li key={bestellung.id}>
+                    <button
+                      className={
+                        (selectedBestellung?.id === bestellung.id ? 'order-btn selected' : 'order-btn') +
+                        (isToday(bestellung.createdAt) ? ' order-btn-today' : '')
+                      }
+                      onClick={() => {
+                        setSelectedBestellung(bestellung);
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      <span className="order-title">{bestellung.name || 'Lieferando-Bestellung'}</span><br />
+                      <span className="order-meta">{bestellung.bestellername || '–'} · {bestellung.bezahlart || '–'}</span><br />
+                      <small>{new Date(bestellung.createdAt).toLocaleString()}</small><br />
+                      <b>Status:</b> <span className={`status-badge status-badge-${bestellung.status}`}>{bestellung.status}</span><br />
+                      <b>Gesamt:</b> {summe.toFixed(2)} €
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         )}
       </aside>
@@ -155,6 +166,25 @@ function isToday(dateString) {
   return d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate();
+}
+
+// Levenshtein-Distanz Funktion
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a || !b) return (a || b).length;
+  const matrix = Array.from({ length: a.length + 1 }, () => []);
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return matrix[a.length][b.length];
 }
 
 // OrderDetail: Name editierbar machen
@@ -249,6 +279,19 @@ function BestellungDetail({ bestellung, refresh }) {
     refresh();
   }
 
+  // Gesamtsumme der Bestellung (über alle Besteller, Preis * Anzahl)
+  function calcOrderSumme() {
+    let sum = 0;
+    bestellung.besteller?.forEach(b => {
+      b.artikel?.forEach(a => {
+        const preis = parseFloat(a.preis) || 0;
+        const anzahl = Number(a.anzahl) > 0 ? Number(a.anzahl) : 1;
+        sum += preis * anzahl;
+      });
+    });
+    return sum;
+  }
+
   return (
     <div className="order-detail">
       <div className="order-head">
@@ -263,7 +306,7 @@ function BestellungDetail({ bestellung, refresh }) {
           {bestellung.besteller?.length > 0 && bestellung.besteller.every(b => b.status === 'Fertig') && bestellung.status !== 'Bestellt' && (
             <span className="order-head-ready" style={{ marginLeft: 12 }}>Bereit für Bestellung</span>
           )}
-          <span className="order-head-sum">{bestellung.summe?.toFixed(2)} €</span>
+          <span className="order-head-sum">{calcOrderSumme().toFixed(2)} €</span>
         </div>
         <div className="order-head-row" style={{ marginTop: 6, gap: 32 }}>
           <div style={{ minWidth: 180, fontSize: '1.08em' }}>
@@ -302,6 +345,45 @@ function BestellungDetail({ bestellung, refresh }) {
           </span>
         </div>
       </div>
+      {/* Artikelsummary zwischen Header und Bestellerliste */}
+      {(() => {
+        // Alle Artikel aller Besteller sammeln und ähnlich geschriebene zusammenfassen
+        const artikelMap = [];
+        const maxDist = 2; // 2-3 Zeichen Abweichung zulassen
+        bestellung.besteller?.forEach(b => {
+          b.artikel?.forEach(a => {
+            if (!a.beschreibung) return;
+            const beschr = a.beschreibung.trim();
+            const anzahl = Number(a.anzahl) > 0 ? Number(a.anzahl) : 1;
+            // Versuche, einen existierenden Eintrag mit ähnlicher Beschreibung zu finden
+            let found = false;
+            for (let entry of artikelMap) {
+              if (levenshtein(entry.name, beschr) <= maxDist) {
+                entry.count += anzahl;
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              artikelMap.push({ name: beschr, count: anzahl });
+            }
+          });
+        });
+        if (artikelMap.length === 0) return null;
+        artikelMap.sort((a, b) => b.count - a.count);
+        return (
+          <div className="artikel-summary" style={{ margin: '18px 0 10px 0', background: 'var(--bg-btn)', borderRadius: 10, padding: '14px 22px', boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }}>
+            <b>Zusammenfassung:</b>
+            <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '18px' }}>
+              {artikelMap.map(({ name, count }) => (
+                <li key={name} style={{ fontSize: '1.08em', color: 'var(--text-main)', fontWeight: 500 }}>
+                  {count}× {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
       <h3>Besteller</h3>
       {!showBestellerForm && (
         <button className="primary-btn" onClick={() => setShowBestellerForm(true)} style={{ margin: '8px 0 16px 0' }}>
@@ -331,6 +413,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
   const [showArtikelForm, setShowArtikelForm] = useState(false);
   const [artikelDesc, setArtikelDesc] = useState('');
   const [artikelPreis, setArtikelPreis] = useState('');
+  const [artikelAnzahl, setArtikelAnzahl] = useState(1);
   const [status, setStatus] = useState(bestellung.status);
   const [nameValue, setNameValue] = useState(bestellung.name || '');
   const [editingName, setEditingName] = useState(false);
@@ -373,15 +456,16 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
 
   async function handleCreateArtikel(e) {
     if (e && e.preventDefault) e.preventDefault();
-    if (!artikelDesc.trim() || !artikelPreis.trim()) return;
+    if (!artikelDesc.trim() || !artikelPreis.trim() || !artikelAnzahl) return;
     await fetch(`http://localhost:3001/api/orders/${orderId}/besteller/${bestellung.id}/artikel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ beschreibung: artikelDesc, preis: artikelPreis })
+      body: JSON.stringify({ beschreibung: artikelDesc, preis: artikelPreis, anzahl: Number(artikelAnzahl) || 1 })
     });
     setShowArtikelForm(false);
     setArtikelDesc('');
     setArtikelPreis('');
+    setArtikelAnzahl(1);
     refresh();
   }
 
@@ -423,6 +507,15 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
     refresh();
   }
 
+  // Gesamtsumme für diesen Besteller (Preis * Anzahl)
+  function calcBestellerSumme() {
+    return bestellung.artikel?.reduce((sum, a) => {
+      const preis = parseFloat(a.preis) || 0;
+      const anzahl = Number(a.anzahl) > 0 ? Number(a.anzahl) : 1;
+      return sum + preis * anzahl;
+    }, 0) || 0;
+  }
+
   return (
     <div className="bestellung-detail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 8 }}>
@@ -433,6 +526,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
             bestellung.name
           )}
         </h2>
+        <span style={{ fontWeight: 700, fontSize: '1.15em', color: 'var(--text-main)', minWidth: 90, textAlign: 'right' }}>{calcBestellerSumme().toFixed(2)} €</span>
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
         <div>
@@ -449,6 +543,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
         <thead>
           <tr>
             <th>Beschreibung</th>
+            <th>Anzahl</th>
             <th>Preis</th>
             <th></th>
           </tr>
@@ -456,7 +551,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
         <tbody>
           {editArtikel.map((a, idx) => (
             <tr key={a.id}>
-              <td style={{ cursor: 'pointer', width: '60%' }} onClick={() => setEditingArtikel({ idx, field: 'beschreibung' })}>
+              <td style={{ cursor: 'pointer', width: '40%' }} onClick={() => setEditingArtikel({ idx, field: 'beschreibung' })}>
                 {editingArtikel.idx === idx && editingArtikel.field === 'beschreibung' ? (
                   <input
                     value={editArtikel[idx].beschreibung}
@@ -468,6 +563,22 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
                   />
                 ) : (
                   a.beschreibung || <span style={{ color: '#888' }}>–</span>
+                )}
+              </td>
+              <td style={{ cursor: 'pointer', width: '15%' }} onClick={() => setEditingArtikel({ idx, field: 'anzahl' })}>
+                {editingArtikel.idx === idx && editingArtikel.field === 'anzahl' ? (
+                  <input
+                    type="number"
+                    min={1}
+                    value={editArtikel[idx].anzahl || 1}
+                    onChange={e => handleEditArtikelChange(idx, 'anzahl', e.target.value)}
+                    onBlur={e => saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1)}
+                    onKeyDown={e => { if (e.key === 'Enter') saveArtikelField(idx, 'anzahl', Number(e.target.value) || 1); }}
+                    autoFocus
+                    style={{ width: '100%', fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
+                  />
+                ) : (
+                  a.anzahl || 1
                 )}
               </td>
               <td style={{ cursor: 'pointer', width: '25%' }} onClick={() => setEditingArtikel({ idx, field: 'preis' })}>
@@ -505,6 +616,15 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
             autoFocus
           />
           <input
+            type="number"
+            min={1}
+            value={artikelAnzahl}
+            onChange={e => setArtikelAnzahl(e.target.value)}
+            placeholder="Anzahl"
+            required
+            style={{ flex: 1, fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
+          />
+          <input
             value={artikelPreis}
             onChange={e => setArtikelPreis(e.target.value)}
             placeholder="Preis (€)"
@@ -515,7 +635,7 @@ function BestellerDetail({ bestellung, orderId, refresh, orderStatus }) {
             style={{ flex: 1, fontSize: '1em', padding: '8px 10px', boxSizing: 'border-box' }}
           />
           <button className="primary-btn" type="submit" style={{ fontSize: '1.2em' }} title="Hinzufügen">+</button>
-          <button className="secondary-btn" type="button" onClick={() => { setShowArtikelForm(false); setArtikelDesc(''); setArtikelPreis(''); }} style={{ fontSize: '1.2em' }} title="Abbrechen">×</button>
+          <button className="secondary-btn" type="button" onClick={() => { setShowArtikelForm(false); setArtikelDesc(''); setArtikelPreis(''); setArtikelAnzahl(1); }} style={{ fontSize: '1.2em' }} title="Abbrechen">×</button>
         </form>
       )}
       {!editingName && !showArtikelForm && (

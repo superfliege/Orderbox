@@ -114,6 +114,8 @@ app.post('/api/orders/:orderId/besteller/:bestellerId/artikel', async (req, res)
   if (!besteller) return res.status(404).json({ error: 'Besteller not found' });
   const artikel = req.body;
   artikel.id = Date.now().toString();
+  // Anzahl-Feld ergänzen, Standard 1
+  artikel.anzahl = typeof artikel.anzahl === 'number' && artikel.anzahl > 0 ? artikel.anzahl : 1;
   besteller.artikel.push(artikel);
   enrichOrder(order);
   await db.write();
